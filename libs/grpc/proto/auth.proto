@@ -1,0 +1,56 @@
+syntax = "proto3";
+
+package auth; 
+
+import "google/protobuf/empty.proto";
+
+service AuthService {
+    rpc Login(LoginRequest) returns (LoginResponse);
+    rpc Register(RegisterRequest) returns (google.protobuf.Empty);
+    rpc GetMe(GetMeRequest) returns (GetMeResponse);
+    rpc UpdateUser(UpdateUserRequest) returns (GetMeResponse);
+    rpc ForgotPassword(ForgotPasswordRequest) returns (google.protobuf.Empty);
+    rpc ResetPassword(ResetPasswordRequest) returns (google.protobuf.Empty);
+}
+
+message LoginRequest {
+    string email = 1;
+    string password = 2;
+}
+
+message LoginResponse {
+    string token = 1;
+    string expires_at = 2;
+}
+
+message RegisterRequest {
+    string email = 1;
+    string password = 2;
+    string username = 3;
+}
+
+
+message GetMeRequest {
+    string token = 1;
+}
+
+message GetMeResponse {
+    string email = 1;
+    string username = 2;
+    string created_at = 3;
+    string updated_at = 4;
+}
+
+message UpdateUserRequest {
+    string email = 1;
+    string username = 2;
+}
+
+message ForgotPasswordRequest {
+    string email = 1;
+}
+
+message ResetPasswordRequest {
+    string token =1;
+    string password = 2;
+}

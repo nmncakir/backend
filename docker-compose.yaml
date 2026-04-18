@@ -1,0 +1,28 @@
+services:
+  backend:
+    container_name: backend
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - DATABASE_URL=postgresql://postgres:postgres@backend-db:5432/backend?schema=public
+    depends_on:
+      - backend-db
+
+  backend-db:
+    container_name: backend-db
+    image: postgres:16.2
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=backend
+    volumes:
+      - backend-db-data:/var/lib/postgresql/data
+
+volumes:
+  backend-db-data:
