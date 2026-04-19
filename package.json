@@ -37,6 +37,8 @@
     "class-validator": "^0.15.1",
     "joi": "^18.1.2",
     "jsonwebtoken": "^9.0.3",
+    "kafkajs": "^2.2.4",
+    "mailgun.js": "^13.0.0",
     "prisma": "^7.7.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1"
@@ -93,6 +95,7 @@
       "^@app/grpc(|/.*)$": "<rootDir>/libs/grpc/src/$1",
       "^@app/jwt(|/.*)$": "<rootDir>/libs/jwt/src/$1",
       "^@app/kafka(|/.*)$": "<rootDir>/libs/kafka/src/$1",
+      "^@app/mailgun(|/.*)$": "<rootDir>/libs/mailgun/src/$1",
       "^@app/prisma(|/.*)$": "<rootDir>/libs/prisma/src/$1",
       "^@app/redis(|/.*)$": "<rootDir>/libs/redis/src/$1"
     }

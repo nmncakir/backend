@@ -2,11 +2,14 @@ import { NestFactory } from '@nestjs/core';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { join } from 'path';
 import { AuthModule } from './auth.module';
+import { ConfigService } from '@nestjs/config';
 
 async function bootstrap() {
-  const port = process.env.PORT ?? '50051';
-  const app = await NestFactory.createMicroservice<MicroserviceOptions>(
-    AuthModule,
+  const app = await NestFactory.create(AuthModule);
+  const configService = app.get(ConfigService);
+  const port = configService.get<number>('AUTH_SERVICE_PORT')!;
+
+  app.connectMicroservice<MicroserviceOptions>(
     {
       transport: Transport.GRPC,
       options: {
@@ -16,6 +19,6 @@ async function bootstrap() {
       },
     },
   );
-  await app.listen();
+  await app.startAllMicroservices();
 }
 void bootstrap();

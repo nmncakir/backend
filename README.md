@@ -1,98 +1,192 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+# Backend
 
-## Description
+**NestJS** monorepo: an HTTP API gateway, **gRPC** microservices, **Kafka** event flow, and shared libraries.
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+[NestJS](https://nestjs.com/)
+[TypeScript](https://www.typescriptlang.org/)
+[Node](https://nodejs.org/)
 
-## Project setup
 
-```bash
-$ npm install
+
+---
+
+## Overview
+
+This repository uses a **Nest monorepo**: business logic lives in applications (`apps/`) and reusable modules (`libs/`). The API gateway exposes HTTP to clients; authentication and other services communicate over gRPC or Kafka.
+
+```mermaid
+flowchart LR
+  subgraph clients [Clients]
+    C[HTTP / Swagger]
+  end
+  subgraph gateway [API Gateway]
+    GW[apps/api-gateway]
+  end
+  subgraph services [Microservices]
+    A[auth — gRPC]
+    F[fraud-engine]
+    N[notification — Kafka]
+    T[transaction — gRPC + Kafka]
+  end
+  subgraph infra [Infrastructure]
+    PG[(PostgreSQL)]
+    K[Kafka]
+  end
+  C --> GW
+  GW --> A
+  GW --> F
+  GW --> N
+  GW --> T
+  A --> PG
+  T --> K
+  N --> K
 ```
 
-## Compile and run the project
+
+
+---
+
+## Applications and libraries
+
+
+| Application      | Role                                       |
+| ---------------- | ------------------------------------------ |
+| **api-gateway**  | Unified HTTP API; gRPC clients (e.g. auth) |
+| **auth**         | gRPC identity / user service               |
+| **fraud-engine** | Fraud detection service                    |
+| **notification** | Kafka consumer; outbound email, etc.       |
+| **transaction**  | gRPC + Kafka producer                      |
+
+
+
+| Library                             | Contents                                               |
+| ----------------------------------- | ------------------------------------------------------ |
+| `common`                            | Shared configuration, validation, DTOs                 |
+| `grpc`                              | Proto definitions and generated client types           |
+| `kafka`                             | Broker options, topic constants, offset commit helpers |
+| `jwt`, `prisma`, `redis`, `mailgun` | Domain-specific modules                                |
+
+
+---
+
+## Requirements
+
+- **Node.js** 18+
+- **npm**
+- **Docker** (optional for local Postgres + Kafka + Kafdrop)
+
+---
+
+## Setup
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+npm install
+cp .env.example .env
 ```
 
-## Run tests
+Edit `.env` for your environment. If you use Prisma:
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+npx prisma generate
 ```
 
-## Deployment
+---
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+## Environment variables
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+Keys match `.env.example`. Summary:
+
+
+| Variable                                         | Description                                           |
+| ------------------------------------------------ | ----------------------------------------------------- |
+| `DATABASE_URL`                                   | PostgreSQL connection string                          |
+| `JWT_SECRET`, `JWT_EXPIRES_IN`                   | JWT settings                                          |
+| `AUTH_SERVICE_URL` … `TRANSACTION_SERVICE_URL`   | gRPC client addresses (gateway)                       |
+| `AUTH_SERVICE_PORT` … `TRANSACTION_SERVICE_PORT` | Listen port per service                               |
+| `KAFKA_BROKER`                                   | Broker list; comma-separated (`host:port,host2:port`) |
+| `MAILGUN_*`                                      | Transactional email (Mailgun)                         |
+
+
+**Kafka in Docker:** the `backend` service in `docker-compose` uses `KAFKA_BROKER=kafka:29092`. When your app runs on the **host** against the bundled Kafka container, use `localhost:9092` (the `PLAINTEXT_HOST` listener).
+
+---
+
+## Development
+
+Run a single app in watch mode:
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+npx nest start api-gateway --watch
+npx nest start auth --watch
+npx nest start notification --watch
+npx nest start transaction --watch
+npx nest start fraud-engine --watch
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+Build everything:
 
-## Resources
+```bash
+npm run build
+```
 
-Check out a few resources that may come in handy when working with NestJS:
+Production entrypoint (default gateway):
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+```bash
+npm run start:prod
+```
 
-## Support
+Formatting and lint:
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+```bash
+npm run format
+npm run lint
+```
 
-## Stay in touch
+---
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+## gRPC and protos
+
+Proto files live under `libs/grpc/proto/`. Regenerate TypeScript:
+
+```bash
+npm run proto:build
+```
+
+> On Windows, `package.json` references `protoc-gen-ts_proto.cmd`. On macOS/Linux, ensure `protoc` and the plugin are on your `PATH`, or adjust the command for your platform.
+
+---
+
+## Docker
+
+Infrastructure plus the sample `backend` service:
+
+```bash
+docker compose up -d
+```
+
+
+| Service                | Port   | Notes                         |
+| ---------------------- | ------ | ----------------------------- |
+| **backend**            | `3000` | Image built from `Dockerfile` |
+| **backend-db**         | `5432` | PostgreSQL 16                 |
+| **kafka**              | `9092` | Access from the host          |
+| **zookeeper**          | `2181` | Kafka dependency              |
+| **kafka-ui** (Kafdrop) | `9000` | Topics / message inspection   |
+
+
+---
+
+## Tests
+
+```bash
+npm run test
+npm run test:cov
+```
+
+---
 
 ## License
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+This project is **UNLICENSED** (private use), consistent with `package.json`.

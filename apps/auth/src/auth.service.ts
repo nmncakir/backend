@@ -4,24 +4,33 @@ import { LoginResponseDto } from '@app/common/dto/auth/response/login-response.d
 import { Empty } from '@app/grpc/generated/google/protobuf/empty';
 import {
   BadRequestException,
+  Inject,
   Injectable,
+  OnModuleInit,
   UnauthorizedException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import { PrismaService } from '@app/prisma';
 import { JwtService } from '@app/jwt';
 import { ConfigService } from '@nestjs/config';
-import { ForgotPasswordRequestDto, ResetPasswordRequestDto, UpdateUserRequestDto, GetMeRequestDto } from '@app/common';
-import { GetMeResponse } from '@app/grpc/generated/auth';
+import { ForgotPasswordRequestDto, ResetPasswordRequestDto, UpdateUserRequestDto } from '@app/common';
+import { GetMeResponse } from '@app/grpc';
 import { Metadata } from '@grpc/grpc-js';
+import { ClientKafka } from '@nestjs/microservices';
+import { KAFKA_TOPICS } from '@app/kafka/kafka.topics';
 
 @Injectable()
-export class AuthService {
+export class AuthService implements OnModuleInit {
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwt: JwtService,
     private readonly config: ConfigService,
+    @Inject('KAFKA_CLIENT')
+    private readonly kafka: ClientKafka,
   ) {}
+  async onModuleInit() {
+    await this.kafka.connect();
+  }
 
   async login(dto: LoginRequestDto): Promise<LoginResponseDto> {
     const user = await this.prisma.user.findUnique({
@@ -52,6 +61,18 @@ export class AuthService {
         password: await bcrypt.hash(dto.password, 10),
       },
     });
+
+    try { 
+      this.kafka.emit(KAFKA_TOPICS.EMAIL_WAITING, {
+        to: dto.email,
+        subject: "Welcome to Wenlarge",
+        text: `Hi ${dto.username} welcome to Wenlarge platform. `,
+        html: `<p>Hi ${dto.username},</p><p>Your Wenlarge account was created successfully.</p>`,
+        messagedAtEmailWaiting: new Date().toISOString(),
+      });
+    } catch (error) {
+      // ignore it because we don't want to block the user registration
+    }
     return {};
   }
 

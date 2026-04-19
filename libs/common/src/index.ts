@@ -5,3 +5,5 @@ export * from './dto/auth/request/update-user-request.dto';
 export * from './dto/auth/request/forgot-password-request.dto';
 export * from './dto/auth/request/reset-password-request.dto';
 export * from './dto/auth/request/get-me-request.dto';
+export * from './config/configuration';
+export * from './config/validation';

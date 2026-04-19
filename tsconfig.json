@@ -41,10 +41,18 @@
         "libs/jwt/src/*"
       ],
       "@app/kafka": [
+        "libs/kafka/src",
         "libs/kafka/src"
       ],
       "@app/kafka/*": [
+        "libs/kafka/src/*",
         "libs/kafka/src/*"
+      ],
+      "@app/mailgun": [
+        "libs/mailgun/src"
+      ],
+      "@app/mailgun/*": [
+        "libs/mailgun/src/*"
       ],
       "@app/prisma": [
         "libs/prisma/src"

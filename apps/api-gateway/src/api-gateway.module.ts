@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { GrpcClientModule } from '@app/grpc/grpc-client/grpc-client.module';
-import configuration from './config/configuration';
-import { validationSchema } from './config/validation';
+import configuration from '../../../libs/common/src/config/configuration';
+import { validationSchema } from '../../../libs/common/src/config/validation';
 import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
 import { FraudEngineModule } from './fraud-engine/fraud-engine.module';
